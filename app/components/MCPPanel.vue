@@ -10,8 +10,14 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <UIcon name="i-ph-spinner" class="animate-spin text-2xl text-blue-500" />
+    <div
+      v-if="isLoading"
+      class="flex items-center justify-center py-8"
+    >
+      <UIcon
+        name="i-ph-spinner"
+        class="animate-spin text-2xl text-blue-500"
+      />
       <span class="ml-2 text-gray-600 dark:text-gray-400">Loading MCP tools...</span>
     </div>
 
@@ -26,7 +32,10 @@
     />
 
     <!-- Tools List -->
-    <div v-if="!isLoading && tools && tools.length > 0" class="space-y-4">
+    <div
+      v-if="!isLoading && tools && tools.length > 0"
+      class="space-y-4"
+    >
       <!-- Drawing Tools -->
       <div v-if="drawingTools.length > 0">
         <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -41,10 +50,17 @@
           >
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-medium text-sm">{{ tool.name }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ tool.description }}</p>
+                <p class="font-medium text-sm">
+                  {{ tool.name }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ tool.description }}
+                </p>
               </div>
-              <UIcon name="i-ph-arrow-right" class="text-gray-400" />
+              <UIcon
+                name="i-ph-arrow-right"
+                class="text-gray-400"
+              />
             </div>
           </UCard>
         </div>
@@ -64,10 +80,17 @@
           >
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-medium text-sm">{{ tool.name }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ tool.description }}</p>
+                <p class="font-medium text-sm">
+                  {{ tool.name }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ tool.description }}
+                </p>
               </div>
-              <UIcon name="i-ph-arrow-right" class="text-gray-400" />
+              <UIcon
+                name="i-ph-arrow-right"
+                class="text-gray-400"
+              />
             </div>
           </UCard>
         </div>
@@ -87,10 +110,17 @@
           >
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-medium text-sm">{{ tool.name }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ tool.description }}</p>
+                <p class="font-medium text-sm">
+                  {{ tool.name }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ tool.description }}
+                </p>
               </div>
-              <UIcon name="i-ph-arrow-right" class="text-gray-400" />
+              <UIcon
+                name="i-ph-arrow-right"
+                class="text-gray-400"
+              />
             </div>
           </UCard>
         </div>
@@ -130,16 +160,29 @@
       </div>
 
       <!-- Last Result -->
-      <div v-if="lastResult" class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-        <h5 class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Last Result:</h5>
+      <div
+        v-if="lastResult"
+        class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+      >
+        <h5 class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+          Last Result:
+        </h5>
         <pre class="text-xs text-gray-800 dark:text-gray-200 overflow-auto">{{ JSON.stringify(lastResult, null, 2) }}</pre>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-if="!isLoading && (!tools || tools.length === 0)" class="text-center py-8">
-      <UIcon name="i-ph-package" class="text-4xl text-gray-400 mb-2" />
-      <p class="text-gray-500 dark:text-gray-400">No MCP tools available</p>
+    <div
+      v-if="!isLoading && (!tools || tools.length === 0)"
+      class="text-center py-8"
+    >
+      <UIcon
+        name="i-ph-package"
+        class="text-4xl text-gray-400 mb-2"
+      />
+      <p class="text-gray-500 dark:text-gray-400">
+        No MCP tools available
+      </p>
     </div>
   </div>
 
@@ -152,14 +195,22 @@
         </h3>
       </template>
 
-      <div v-if="selectedTool" class="space-y-4">
+      <div
+        v-if="selectedTool"
+        class="space-y-4"
+      >
         <p class="text-sm text-gray-600 dark:text-gray-400">
           {{ selectedTool.description }}
         </p>
 
         <!-- Tool Parameters -->
-        <div v-if="selectedTool.parameters && Object.keys(selectedTool.parameters).length > 0" class="space-y-3">
-          <h4 class="text-sm font-medium">Parameters:</h4>
+        <div
+          v-if="selectedTool.parameters && Object.keys(selectedTool.parameters).length > 0"
+          class="space-y-3"
+        >
+          <h4 class="text-sm font-medium">
+            Parameters:
+          </h4>
           <div
             v-for="(param, paramName) in selectedTool.parameters"
             :key="paramName"
@@ -167,21 +218,30 @@
           >
             <label class="text-xs font-medium text-gray-700 dark:text-gray-300">
               {{ paramName }}
-              <span v-if="param.required" class="text-red-500">*</span>
+              <span
+                v-if="param.required"
+                class="text-red-500"
+              >*</span>
             </label>
             <UInput
-              v-model="toolParams[paramName]"
+              v-model="toolParams[paramName] as string"
               :placeholder="param.description || `Enter ${paramName}`"
               size="sm"
             />
-            <p v-if="param.description" class="text-xs text-gray-500">
+            <p
+              v-if="param.description"
+              class="text-xs text-gray-500"
+            >
               {{ param.description }}
             </p>
           </div>
         </div>
 
         <!-- No Parameters -->
-        <div v-else class="text-sm text-gray-500">
+        <div
+          v-else
+          class="text-sm text-gray-500"
+        >
           This tool requires no parameters.
         </div>
       </div>
@@ -207,58 +267,62 @@
 </template>
 
 <script setup lang="ts">
-interface MCPTool {
-  name: string
-  description: string
-  category: string
-  parameters: Record<string, any>
-}
-
 import { useMCP } from '../../composables/useMCP'
+
+interface MCPResponse {
+  success: boolean
+  message?: string
+  data?: unknown
+  error?: string
+}
 
 const { tools, isLoading, error, executeTool, createDrawing, listDrawings, generateAIDrawing } = useMCP()
 
 // Reactive state
 const showDialog = ref(false)
-const selectedTool = ref<MCPTool | null>(null)
-const toolParams = ref<Record<string, any>>({})
-const lastResult = ref<any>(null)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const selectedTool = ref<any>(null)
+const toolParams = ref<Record<string, unknown>>({})
+const lastResult = ref<MCPResponse | null>(null)
 
 // Computed properties for categorized tools
-const drawingTools = computed(() => tools.value?.filter((tool: MCPTool) => tool.category === 'drawing') || [])
-const storageTools = computed(() => tools.value?.filter((tool: MCPTool) => tool.category === 'storage') || [])
-const aiTools = computed(() => tools.value?.filter((tool: MCPTool) => tool.category === 'ai') || [])
+const drawingTools = computed(() => tools.value?.filter(tool => tool.category === 'drawing') || [])
+const storageTools = computed(() => tools.value?.filter(tool => tool.category === 'storage') || [])
+const aiTools = computed(() => tools.value?.filter(tool => tool.category === 'ai') || [])
 
 // Methods
-const showToolDialog = (tool: MCPTool) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const showToolDialog = (tool: any) => {
   selectedTool.value = tool
   toolParams.value = {}
-  
+
   // Set default values
   if (tool.parameters) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Object.entries(tool.parameters).forEach(([paramName, param]: [string, any]) => {
       if (param.default !== undefined) {
         toolParams.value[paramName] = param.default
       }
     })
   }
-  
+
   showDialog.value = true
 }
 
 const executeSelectedTool = async () => {
   if (!selectedTool.value) return
-  
+
   try {
     const result = await executeTool(selectedTool.value.name, toolParams.value)
     lastResult.value = result
     showDialog.value = false
-    
+
     // Show success notification
     if (result.success) {
       console.log('Tool executed successfully:', result)
     }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error executing tool:', err)
   }
 }
@@ -272,7 +336,8 @@ const quickCreateDrawing = async () => {
       backgroundColor: '#ffffff',
     })
     lastResult.value = result
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error creating drawing:', err)
   }
 }
@@ -281,7 +346,8 @@ const quickListDrawings = async () => {
   try {
     const result = await listDrawings({ limit: 5 })
     lastResult.value = result
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error listing drawings:', err)
   }
 }
@@ -293,7 +359,8 @@ const quickGenerateAI = async () => {
       size: 'medium',
     })
     lastResult.value = result
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error generating AI drawing:', err)
   }
 }

@@ -63,18 +63,26 @@ async function save(dataURL: string) {
             </div>
           </div>
         </div>
-        
+
         <!-- MCP Panel Section -->
         <div class="lg:col-span-1">
-          <div v-if="loggedIn" class="sticky top-4">
-            <h3 class="text-lg font-semibold mb-4">MCP Tools</h3>
+          <div
+            v-if="loggedIn"
+            class="sticky top-4"
+          >
+            <h3 class="text-lg font-semibold mb-4">
+              MCP Tools
+            </h3>
             <MCPPanel />
           </div>
         </div>
       </div>
-      
+
       <!-- Auth Section for Non-logged Users -->
-      <div v-if="!loggedIn" class="mx-auto max-w-sm mt-8">
+      <div
+        v-if="!loggedIn"
+        class="mx-auto max-w-sm mt-8"
+      >
         <div class="w-full space-y-6">
           <div class="gap-y-6 flex flex-col">
             <div class="space-y-3">

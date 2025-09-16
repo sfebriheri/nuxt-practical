@@ -2,7 +2,26 @@
 import type { BlobObject } from '@nuxthub/core'
 import { UseTimeAgo, vInfiniteScroll } from '@vueuse/components'
 
-const { data } = await useFetch('/api/drawings', {
+interface CustomMetadata {
+  description?: string
+  aiImage?: string
+  userUrl?: string
+  userAvatar?: string
+  userName?: string
+  uploadedAt?: string
+}
+
+interface DrawingBlob extends Omit<BlobObject, 'customMetadata'> {
+  customMetadata?: CustomMetadata
+}
+
+interface DrawingsResponse {
+  blobs: DrawingBlob[]
+  cursor?: string
+  hasMore: boolean
+}
+
+const { data } = await useFetch<DrawingsResponse>('/api/drawings', {
   // don't return a shallowRef as we mutate the array
   deep: true,
 })
@@ -12,7 +31,7 @@ async function loadMore() {
   if (loading.value || !data.value?.hasMore) return
   loading.value = true
 
-  const more = await $fetch(`/api/drawings`, {
+  const more = await $fetch<DrawingsResponse>(`/api/drawings`, {
     query: { cursor: data.value.cursor },
   })
   data.value.blobs.push(...more.blobs)
@@ -21,7 +40,7 @@ async function loadMore() {
   loading.value = false
 }
 
-function drawingTitle(drawing: BlobObject) {
+function drawingTitle(drawing: DrawingBlob) {
   const title = drawing.customMetadata?.description || ''
   if (!drawing.customMetadata?.aiImage) {
     return title + '\n[AI image could not be generated]'

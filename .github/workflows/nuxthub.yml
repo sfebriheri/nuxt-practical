@@ -1,13 +1,16 @@
-name: Deploy to NuxtHub
-on: push
+name: CI/CD Pipeline
+on: 
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  deploy:
-    name: "Deploy to NuxtHub"
+  test:
+    name: "Test & Build"
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +29,40 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build & Deploy to NuxtHub
-        uses: nuxt-hub/action@v2
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run type checking
+        run: pnpm typecheck
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          project-key: nuxt-practical-zmdy
+          name: build-files
+          path: .output/
+
+  deploy:
+    name: "Deploy"
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-files
+          path: .output/
+
+      - name: Deploy to production
+        run: |
+          echo "Deploy step - configure your deployment target here"
+          echo "Examples: Deploy to Vercel, Netlify, AWS, etc."
+          # Add your deployment commands here

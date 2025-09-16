@@ -1,14 +1,50 @@
+// Define proper types for MCP parameters
+interface MCPParameter {
+  type: string
+  description?: string
+  required?: boolean
+  default?: unknown
+  enum?: string[]
+}
+
 interface MCPTool {
   name: string
   description: string
   category: string
-  parameters: Record<string, any>
+  parameters: Record<string, MCPParameter>
 }
 
 interface MCPResponse {
   success: boolean
   message?: string
-  [key: string]: any
+  data?: unknown
+  error?: string
+}
+
+interface DrawingMetadata {
+  title?: string
+  description?: string
+  tags?: string[]
+  createdAt?: string
+  updatedAt?: string
+  [key: string]: unknown
+}
+
+interface DrawingOptions {
+  width?: number
+  height?: number
+  backgroundColor?: string
+}
+
+interface AIDrawingOptions {
+  style?: string
+  size?: string
+}
+
+interface ListOptions {
+  limit?: number
+  offset?: number
+  [key: string]: unknown
 }
 
 export const useMCP = () => {
@@ -21,23 +57,25 @@ export const useMCP = () => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       const response = await $fetch<{ tools: MCPTool[] }>('/api/mcp/tools')
       tools.value = response.tools
-    } catch (err) {
+    }
+    catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch MCP tools'
       console.error('Error fetching MCP tools:', err)
-    } finally {
+    }
+    finally {
       isLoading.value = false
     }
   }
 
   // Execute an MCP tool
-  const executeTool = async (toolName: string, args: Record<string, any> = {}): Promise<MCPResponse> => {
+  const executeTool = async (toolName: string, args: Record<string, unknown> = {}): Promise<MCPResponse> => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       const response = await $fetch<MCPResponse>('/api/mcp/execute', {
         method: 'POST',
         body: {
@@ -45,31 +83,33 @@ export const useMCP = () => {
           arguments: args,
         },
       })
-      
+
       return response
-    } catch (err) {
+    }
+    catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to execute MCP tool'
       error.value = errorMessage
       console.error(`Error executing MCP tool ${toolName}:`, err)
-      
+
       return {
         success: false,
         message: errorMessage,
       }
-    } finally {
+    }
+    finally {
       isLoading.value = false
     }
   }
 
   // Specific tool methods for convenience
-  const createDrawing = async (title: string, options: { width?: number; height?: number; backgroundColor?: string } = {}) => {
+  const createDrawing = async (title: string, options: DrawingOptions = {}) => {
     return await executeTool('create_drawing', {
       title,
       ...options,
     })
   }
 
-  const saveDrawing = async (drawingId: string, drawingData: string, metadata?: Record<string, any>) => {
+  const saveDrawing = async (drawingId: string, drawingData: string, metadata?: DrawingMetadata) => {
     return await executeTool('save_drawing', {
       drawingId,
       drawingData,
@@ -83,14 +123,15 @@ export const useMCP = () => {
     })
   }
 
-  const listDrawings = async (options: { limit?: number; offset?: number } = {}) => {
+  const listDrawings = async (options: ListOptions = {}) => {
     return await executeTool('list_drawings', options)
   }
 
-  const generateAIDrawing = async (prompt: string, options: { style?: string; size?: string } = {}) => {
+  const generateAIDrawing = async (prompt: string, options: AIDrawingOptions = {}) => {
     return await executeTool('generate_ai_drawing', {
       prompt,
-      ...options,
+      style: options.style,
+      size: options.size,
     })
   }
 
@@ -114,18 +155,18 @@ export const useMCP = () => {
     tools: readonly(tools),
     isLoading: readonly(isLoading),
     error: readonly(error),
-    
+
     // Methods
     fetchTools,
     executeTool,
-    
+
     // Convenience methods
     createDrawing,
     saveDrawing,
     getDrawing,
     listDrawings,
     generateAIDrawing,
-    
+
     // Computed helpers
     getToolsByCategory,
     hasToolAvailable,

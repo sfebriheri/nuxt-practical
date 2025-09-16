@@ -9,7 +9,7 @@ export default eventHandler(async (event) => {
   })
   if (!import.meta.dev && blobs.length) {
     const [lastDrawing] = blobs
-    if (lastDrawing.customMetadata?.userId === user.id) {
+    if (lastDrawing && lastDrawing.customMetadata?.userId === user.id) {
       throw createError({
         statusCode: 400,
         message: 'You cannot upload two drawings in a row. Please wait for someone else to draw an image.',
@@ -54,10 +54,41 @@ export default eventHandler(async (event) => {
     strength: 0.75,
     image: [...new Uint8Array(await drawing.arrayBuffer())],
   })
-    .then((blob: Blob | Uint8Array) => {
-      if (blob instanceof Uint8Array) {
-        blob = new Blob([blob])
+    .then(async (aiResponse) => {
+      let blob: Blob
+
+      if (aiResponse instanceof ReadableStream) {
+        // Convert ReadableStream to Uint8Array then to Blob
+        const reader = aiResponse.getReader()
+        const chunks: Uint8Array[] = []
+        let done = false
+
+        while (!done) {
+          const { value, done: readerDone } = await reader.read()
+          done = readerDone
+          if (value) {
+            chunks.push(value)
+          }
+        }
+
+        const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
+        const result = new Uint8Array(totalLength)
+        let offset = 0
+
+        for (const chunk of chunks) {
+          result.set(chunk, offset)
+          offset += chunk.length
+        }
+
+        blob = new Blob([result])
       }
+      else if (aiResponse instanceof Uint8Array) {
+        blob = new Blob([aiResponse])
+      }
+      else {
+        blob = aiResponse as unknown as Blob
+      }
+
       // If black image, skip
       if (blob.size === 842) {
         return null

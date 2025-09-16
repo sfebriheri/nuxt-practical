@@ -1,10 +1,40 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import type {
+  Tool } from '@modelcontextprotocol/sdk/types.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  Tool,
 } from '@modelcontextprotocol/sdk/types.js'
+
+// Define proper types for MCP tool arguments
+interface CreateDrawingArgs {
+  title: string
+  width?: number
+  height?: number
+  backgroundColor?: string
+}
+
+interface SaveDrawingArgs {
+  drawingId: string
+  drawingData: string
+  metadata?: Record<string, unknown>
+}
+
+interface GetDrawingArgs {
+  drawingId: string
+}
+
+interface ListDrawingsArgs {
+  limit?: number
+  offset?: number
+}
+
+interface GenerateAIDrawingArgs {
+  prompt: string
+  style?: string
+  size?: string
+}
 
 // MCP Server for AI Drawing Application
 class DrawingMCPServer {
@@ -20,7 +50,7 @@ class DrawingMCPServer {
         capabilities: {
           tools: {},
         },
-      }
+      },
     )
 
     this.setupToolHandlers()
@@ -148,40 +178,28 @@ class DrawingMCPServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params
 
-      try {
-        switch (name) {
-          case 'create_drawing':
-            return await this.handleCreateDrawing(args)
-          case 'save_drawing':
-            return await this.handleSaveDrawing(args)
-          case 'get_drawing':
-            return await this.handleGetDrawing(args)
-          case 'list_drawings':
-            return await this.handleListDrawings(args)
-          case 'generate_ai_drawing':
-            return await this.handleGenerateAIDrawing(args)
-          default:
-            throw new Error(`Unknown tool: ${name}`)
-        }
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error executing tool ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            },
-          ],
-          isError: true,
-        }
+      switch (name) {
+        case 'create_drawing':
+          return await this.handleCreateDrawing(args as unknown as CreateDrawingArgs)
+        case 'save_drawing':
+          return await this.handleSaveDrawing(args as unknown as SaveDrawingArgs)
+        case 'get_drawing':
+          return await this.handleGetDrawing(args as unknown as GetDrawingArgs)
+        case 'list_drawings':
+          return await this.handleListDrawings(args as unknown as ListDrawingsArgs)
+        case 'generate_ai_drawing':
+          return await this.handleGenerateAIDrawing(args as unknown as GenerateAIDrawingArgs)
+        default:
+          throw new Error(`Unknown tool: ${name}`)
       }
     })
   }
 
-  private async handleCreateDrawing(args: any) {
+  private async handleCreateDrawing(args: CreateDrawingArgs) {
     const { title, width = 800, height = 600, backgroundColor = '#ffffff' } = args
-    
+
     const drawingId = `drawing_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
     return {
       content: [
         {
@@ -199,12 +217,12 @@ class DrawingMCPServer {
     }
   }
 
-  private async handleSaveDrawing(args: any) {
+  private async handleSaveDrawing(args: SaveDrawingArgs) {
     const { drawingId, drawingData, metadata = {} } = args
-    
+
     // In a real implementation, this would save to a database or file system
     // For now, we'll simulate the save operation
-    
+
     return {
       content: [
         {
@@ -221,9 +239,9 @@ class DrawingMCPServer {
     }
   }
 
-  private async handleGetDrawing(args: any) {
+  private async handleGetDrawing(args: GetDrawingArgs) {
     const { drawingId } = args
-    
+
     // Simulate retrieving drawing data
     return {
       content: [
@@ -242,9 +260,9 @@ class DrawingMCPServer {
     }
   }
 
-  private async handleListDrawings(args: any) {
+  private async handleListDrawings(args: ListDrawingsArgs) {
     const { limit = 10, offset = 0 } = args
-    
+
     // Simulate listing drawings
     const mockDrawings = Array.from({ length: Math.min(limit, 5) }, (_, i) => ({
       id: `drawing_${Date.now() - i * 1000}_${Math.random().toString(36).substr(2, 9)}`,
@@ -252,7 +270,7 @@ class DrawingMCPServer {
       createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
       thumbnail: 'thumbnail_placeholder',
     }))
-    
+
     return {
       content: [
         {
@@ -269,9 +287,9 @@ class DrawingMCPServer {
     }
   }
 
-  private async handleGenerateAIDrawing(args: any) {
+  private async handleGenerateAIDrawing(args: GenerateAIDrawingArgs) {
     const { prompt, style = 'sketch', size = 'medium' } = args
-    
+
     // Simulate AI drawing generation
     return {
       content: [
@@ -294,7 +312,7 @@ class DrawingMCPServer {
 
   private setupErrorHandling() {
     this.server.onerror = (error) => {
-      console.error('[MCP Server Error]:', error)
+      console.error('[MCP Error]', error)
     }
 
     process.on('SIGINT', async () => {
@@ -306,14 +324,14 @@ class DrawingMCPServer {
   async run() {
     const transport = new StdioServerTransport()
     await this.server.connect(transport)
-    console.error('AI Drawing MCP Server running on stdio')
+    console.error('Drawing MCP server running on stdio')
   }
 }
 
-// Export for use in other parts of the application
+// Export the server class
 export { DrawingMCPServer }
 
-// Run server if this file is executed directly
+// Run the server if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   const server = new DrawingMCPServer()
   server.run().catch(console.error)

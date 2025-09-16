@@ -1,4 +1,4 @@
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   // Return available MCP tools for the drawing application
   return {
     tools: [

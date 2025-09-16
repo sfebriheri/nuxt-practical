@@ -1,3 +1,32 @@
+// Define proper types for MCP tool arguments
+interface CreateDrawingArgs {
+  title: string
+  width?: number
+  height?: number
+  backgroundColor?: string
+}
+
+interface SaveDrawingArgs {
+  drawingId: string
+  drawingData: string
+  metadata?: Record<string, unknown>
+}
+
+interface GetDrawingArgs {
+  drawingId: string
+}
+
+interface ListDrawingsArgs {
+  limit?: number
+  offset?: number
+}
+
+interface GenerateAIDrawingArgs {
+  prompt: string
+  style?: string
+  size?: string
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { toolName, arguments: args } = body
@@ -27,7 +56,8 @@ export default defineEventHandler(async (event) => {
           statusMessage: `Unknown tool: ${toolName}`,
         })
     }
-  } catch (error) {
+  }
+  catch (error) {
     throw createError({
       statusCode: 500,
       statusMessage: `Error executing tool ${toolName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -35,18 +65,18 @@ export default defineEventHandler(async (event) => {
   }
 })
 
-async function handleCreateDrawing(args: any) {
+async function handleCreateDrawing(args: CreateDrawingArgs) {
   const { title, width = 800, height = 600, backgroundColor = '#ffffff' } = args
-  
+
   if (!title) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Title is required for creating a drawing',
     })
   }
-  
+
   const drawingId = `drawing_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  
+
   return {
     success: true,
     drawingId,
@@ -58,19 +88,19 @@ async function handleCreateDrawing(args: any) {
   }
 }
 
-async function handleSaveDrawing(args: any) {
+async function handleSaveDrawing(args: SaveDrawingArgs) {
   const { drawingId, drawingData, metadata = {} } = args
-  
+
   if (!drawingId || !drawingData) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Drawing ID and drawing data are required',
     })
   }
-  
+
   // In a real implementation, this would save to NuxtHub storage
   // For now, we'll simulate the save operation
-  
+
   return {
     success: true,
     drawingId,
@@ -81,19 +111,19 @@ async function handleSaveDrawing(args: any) {
   }
 }
 
-async function handleGetDrawing(args: any) {
+async function handleGetDrawing(args: GetDrawingArgs) {
   const { drawingId } = args
-  
+
   if (!drawingId) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Drawing ID is required',
     })
   }
-  
+
   // Simulate retrieving drawing data
   // In a real implementation, this would fetch from NuxtHub storage
-  
+
   return {
     success: true,
     drawingId,
@@ -109,12 +139,12 @@ async function handleGetDrawing(args: any) {
   }
 }
 
-async function handleListDrawings(args: any) {
+async function handleListDrawings(args: ListDrawingsArgs) {
   const { limit = 10, offset = 0 } = args
-  
+
   // Simulate listing drawings
   // In a real implementation, this would query NuxtHub storage
-  
+
   const mockDrawings = Array.from({ length: Math.min(limit, 5) }, (_, i) => ({
     id: `drawing_${Date.now() - i * 1000}_${Math.random().toString(36).substr(2, 9)}`,
     title: `Drawing ${i + 1}`,
@@ -126,7 +156,7 @@ async function handleListDrawings(args: any) {
       backgroundColor: '#ffffff',
     },
   }))
-  
+
   return {
     success: true,
     drawings: mockDrawings,
@@ -137,19 +167,19 @@ async function handleListDrawings(args: any) {
   }
 }
 
-async function handleGenerateAIDrawing(args: any) {
+async function handleGenerateAIDrawing(args: GenerateAIDrawingArgs) {
   const { prompt, style = 'sketch', size = 'medium' } = args
-  
+
   if (!prompt) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Prompt is required for AI drawing generation',
     })
   }
-  
+
   // Simulate AI drawing generation
   // In a real implementation, this would use NuxtHub AI capabilities
-  
+
   return {
     success: true,
     prompt,
