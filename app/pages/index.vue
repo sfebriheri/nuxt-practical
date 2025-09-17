@@ -1,117 +1,60 @@
+vue
 <script setup lang="ts">
-import type { BlobObject } from '@nuxthub/core'
-import { UseTimeAgo, vInfiniteScroll } from '@vueuse/components'
-
-interface CustomMetadata {
-  description?: string
-  aiImage?: string
-  userUrl?: string
-  userAvatar?: string
-  userName?: string
-  uploadedAt?: string
-}
-
-interface DrawingBlob extends Omit<BlobObject, 'customMetadata'> {
-  customMetadata?: CustomMetadata
-}
-
-interface DrawingsResponse {
-  blobs: DrawingBlob[]
-  cursor?: string
-  hasMore: boolean
-}
-
-const { data } = await useFetch<DrawingsResponse>('/api/drawings', {
-  // don't return a shallowRef as we mutate the array
-  deep: true,
-})
-
-const loading = ref(false)
-async function loadMore() {
-  if (loading.value || !data.value?.hasMore) return
-  loading.value = true
-
-  const more = await $fetch<DrawingsResponse>(`/api/drawings`, {
-    query: { cursor: data.value.cursor },
-  })
-  data.value.blobs.push(...more.blobs)
-  data.value.cursor = more.cursor
-  data.value.hasMore = more.hasMore
-  loading.value = false
-}
-
-function drawingTitle(drawing: DrawingBlob) {
-  const title = drawing.customMetadata?.description || ''
-  if (!drawing.customMetadata?.aiImage) {
-    return title + '\n[AI image could not be generated]'
+interface Drawing {
+  pathname: string
+  customMetadata?: {
+    description?: string
+    uploadedAt?: string
   }
-  return title
 }
+
+const { data: drawings } = await useFetch<{ blobs: Drawing[] }>('/api/drawings')
 </script>
 
 <template>
-  <div class="my-8">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 ">
-      <div
-        v-for="drawing in data?.blobs"
+  <div>
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        Simple Drawing Gallery
+      </h1>
+      <p class="text-gray-600">
+        Create and share your drawings
+      </p>
+    </div>
+
+    <div v-if="drawings?.blobs?.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div 
+        v-for="drawing in drawings.blobs" 
         :key="drawing.pathname"
-        class="flex flex-col gap-2"
+        class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
       >
-        <div
-          class="group relative max-w-[400px]"
-          :title="drawingTitle(drawing)"
-        >
-          <img
-            :src="`/drawings/${drawing.pathname}`"
-            :alt="drawing.customMetadata?.description || drawing.pathname"
-            class="w-full rounded aspect-1"
-            loading="lazy"
-          >
-          <img
-            v-if="drawing.customMetadata?.aiImage"
-            :src="`/drawings/${drawing.customMetadata?.aiImage}`"
-            :alt="`AI image generated of ${drawing.customMetadata?.description || drawing.pathname}`"
-            :title="drawing.customMetadata?.description || ''"
-            class="w-full rounded aspect-1 absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-200"
-            loading="lazy"
-          >
-        </div>
-        <div class="flex items-center justify-between max-w-[400px]">
-          <NuxtLink
-            class="flex items-center gap-1"
-            :to="drawing.customMetadata?.userUrl"
-            target="_blank"
-          >
-            <UAvatar
-              :src="drawing.customMetadata?.userAvatar"
-              size="xs"
-              icon="i-ph-mask-happy-duotone"
-            />
-            <span class="text-xs font-semibold">{{ drawing.customMetadata?.userName }}</span>
-          </NuxtLink>
-          <UseTimeAgo
-            v-slot="{ timeAgo }"
-            :time="new Date(drawing.customMetadata?.uploadedAt || drawing.uploadedAt)"
-          >
-            <span class="text-xs text-(--ui-text-muted)">{{ timeAgo }}</span>
-          </UseTimeAgo>
+        <img 
+          :src="drawing.pathname" 
+          :alt="drawing.customMetadata?.description || 'Drawing'"
+          class="w-full h-48 object-cover"
+        />
+        <div v-if="drawing.customMetadata?.description" class="p-4">
+          <p class="text-sm text-gray-700">
+            {{ drawing.customMetadata.description }}
+          </p>
         </div>
       </div>
     </div>
-    <div
-      v-if="data?.hasMore"
-      v-infinite-scroll="[loadMore, { distance: 10, interval: 1000 }]"
-      class="flex items-center justify-center mt-2 p-4"
-    >
-      <UButton
-        color="neutral"
-        variant="subtle"
-        block
-        size="md"
-        :loading="loading"
-        :label="loading ? 'Loading more drawings...' : 'Load more drawings'"
-        @click="loadMore"
-      />
+
+    <div v-else class="text-center py-12">
+      <div class="text-gray-400 text-6xl mb-4">🎨</div>
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">
+        No drawings yet
+      </h2>
+      <p class="text-gray-500 mb-6">
+        Start creating your first drawing!
+      </p>
+      <NuxtLink 
+        to="/draw"
+        class="inline-block bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+      >
+        Create Drawing
+      </NuxtLink>
     </div>
   </div>
 </template>

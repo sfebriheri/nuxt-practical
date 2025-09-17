@@ -1,140 +1,77 @@
+vue
 <script setup lang="ts">
-const { loggedIn } = useUserSession()
-const authProviders = useState<{ google: boolean, github: boolean }>('authProviders')
-const toast = useToast()
-const saving = ref(false)
-const drawing = ref('')
+const description = ref('')
+const isSaving = ref(false)
 
-function onDraw(dataURL: string) {
-  drawing.value = dataURL
-}
-
-async function save(dataURL: string) {
-  if (saving.value) return
-  saving.value = true
-  // Transform the dataURL to a Blob
-  const blob = await fetch(dataURL).then(res => res.blob())
-  // Create the form data
-  const form = new FormData()
-  form.append('drawing', new File([blob], `drawing.jpg`, { type: 'image/jpeg' }))
-
-  // Upload the file to the server
-  await $fetch('/api/upload', {
-    method: 'POST',
-    body: form,
-  })
-    .then(() => {
-      toast.add({
-        title: 'Drawing shared!',
-        description: 'Your drawing has been shared with the world.',
-        color: 'success',
-      })
-      navigateTo('/')
-    }).catch((err) => {
-      toast.add({
-        title: 'Could not share drawing',
-        description: err.data?.message || err.message,
-        color: 'error',
-      })
+async function save() {
+  if (!drawPadRef.value) return
+  
+  isSaving.value = true
+  try {
+    const canvas = drawPadRef.value.getCanvas()
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob(resolve!, 'image/png')
     })
-  saving.value = false
+    
+    const formData = new FormData()
+    formData.append('image', blob, 'drawing.png')
+    formData.append('description', description.value)
+    
+    await fetch('/api/drawings', {
+      method: 'POST',
+      body: formData
+    })
+    
+    await navigateTo('/')
+  } catch (error) {
+    console.error('Failed to save drawing:', error)
+  } finally {
+    isSaving.value = false
+  }
 }
+
+const drawPadRef = ref()
 </script>
 
 <template>
-  <div class="my-8">
-    <div class="mx-auto max-w-7xl px-4">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Drawing Section -->
-        <div class="lg:col-span-2">
-          <div class="mx-auto max-w-[400px]">
-            <p class="text-center pb-4">
-              Create a drawing and share it with the world!
-            </p>
-            <div v-if="loggedIn">
-              <DrawPad
-                save-label="Share"
-                :saving="saving"
-                class="max-w-[400px]"
-                @save="save"
-                @draw="onDraw"
-              />
-              <!-- <AIDraw :drawing="drawing" class="mt-4" /> -->
-            </div>
-          </div>
-        </div>
-
-        <!-- MCP Panel Section -->
-        <div class="lg:col-span-1">
-          <div
-            v-if="loggedIn"
-            class="sticky top-4"
-          >
-            <h3 class="text-lg font-semibold mb-4">
-              MCP Tools
-            </h3>
-            <MCPPanel />
-          </div>
-        </div>
+  <div class="min-h-screen bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-2xl font-bold mb-6">Create Drawing</h1>
+      
+      <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <MinimalDrawPad 
+          ref="drawPadRef"
+          @drawing="() => {}"
+          class="w-full h-96 border border-gray-200 rounded"
+        />
       </div>
-
-      <!-- Auth Section for Non-logged Users -->
-      <div
-        v-if="!loggedIn"
-        class="mx-auto max-w-sm mt-8"
-      >
-        <div class="w-full space-y-6">
-          <div class="gap-y-6 flex flex-col">
-            <div class="space-y-3">
-              <UButton
-                v-if="authProviders.google"
-                to="/auth/google"
-                label="Sign-in with Google"
-                icon="i-logos-google-icon"
-                color="neutral"
-                variant="outline"
-                size="lg"
-                external
-                block
-              />
-              <UButton
-                v-if="authProviders.github"
-                to="/auth/github"
-                label="Sign-in with GitHub"
-                icon="i-simple-icons-github"
-                color="neutral"
-                size="lg"
-                external
-                block
-              />
-              <UButton
-                v-if="!authProviders.github && !authProviders.google"
-                to="/auth/anonymous"
-                label="Sign-in anonymously"
-                icon="i-ph-mask-happy-duotone"
-                color="neutral"
-                size="lg"
-                external
-                block
-              />
-            </div>
-          </div>
-          <p
-            v-if="authProviders.google || authProviders.github"
-            class="text-center text-sm text-(--ui-text-muted)"
-          >
-            No personal informations regarding your GitHub or Google account are stored in database.
-            Only your drawings created are stored with your username and avatar from these providers. Checkout the <UButton
-              to="https://git.new/draw"
-              variant="link"
-              color="neutral"
-              target="_blank"
-              class="p-0"
-            >
-              source code
-            </UButton> of this application.
-          </p>
-        </div>
+      
+      <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Description (optional)
+        </label>
+        <input
+          v-model="description"
+          type="text"
+          placeholder="Describe your drawing..."
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      
+      <div class="flex gap-4">
+        <button
+          @click="drawPadRef?.clear()"
+          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+        >
+          Clear
+        </button>
+        <button
+          @click="save"
+          :disabled="isSaving"
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {{ isSaving ? 'Saving...' : 'Save & Share' }}
+        </button>
       </div>
     </div>
   </div>
