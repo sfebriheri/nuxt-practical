@@ -10,6 +10,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "@nuxt/ui": "^3.3.4",
     "@nuxthub/core": "^0.9.0",
     "nuxt": "^3.17.5",
     "signature_pad": "^5.0.9"

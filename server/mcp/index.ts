@@ -1,7 +1,9 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type {
-  Tool } from '@modelcontextprotocol/sdk/types.js'
+  Tool,
+  CallToolRequest
+} from '@modelcontextprotocol/sdk/types.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -175,7 +177,7 @@ class DrawingMCPServer {
     })
 
     // Handle tool calls
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    this.server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
       const { name, arguments: args } = request.params
 
       switch (name) {
@@ -311,7 +313,7 @@ class DrawingMCPServer {
   }
 
   private setupErrorHandling() {
-    this.server.onerror = (error) => {
+    this.server.onerror = (error: Error) => {
       console.error('[MCP Error]', error)
     }
 
